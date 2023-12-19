@@ -5,6 +5,7 @@ import com.blog.entities.Post;
 import com.blog.entities.User;
 import com.blog.exceptions.ResourceNotFoundException;
 import com.blog.payloads.PostDto;
+import com.blog.payloads.PostResponse;
 import com.blog.repositories.CategoryRepo;
 import com.blog.repositories.PostRepo;
 import com.blog.repositories.UserRepo;
@@ -12,6 +13,10 @@ import com.blog.services.CategoryService;
 import com.blog.services.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -71,13 +76,32 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> getAllPosts() {
-        return null;
+    public PostResponse getAllPosts(Integer pageNumber, Integer pageSize,String sortBy) {
+//        int pageSize = 5;
+//        int pageNumber = 2;
+        Pageable p = PageRequest.of(pageNumber,pageSize, Sort.by(sortBy));
+        Page<Post> pagePost = this.postRepo.findAll(p);
+        List<Post> x = pagePost.getContent();
+
+        //List<Post> allPosts = this.postRepo.findAll();
+        List<PostDto> postDtoList = x.stream().map((post) -> this.modelMapper.map(post, PostDto.class)).collect(Collectors.toList());
+        PostResponse postResponse = new PostResponse();
+        postResponse.setContentList(postDtoList);
+        postResponse.setPageNumber(pagePost.getNumber());
+        postResponse.setPageSize(pagePost.getSize());
+        postResponse.setTotalElements(pagePost.getNumberOfElements());
+
+        postResponse.setTotalPages(pagePost.getTotalPages());
+        postResponse.setLastPage(pagePost.isLast());
+        return postResponse;
     }
 
     @Override
-    public Post getPostById(Integer postId) {
-        return null;
+    public PostDto getPostById(Integer postId) {
+      Post post =   this.postRepo.findById(postId)
+              .orElseThrow(()->new ResourceNotFoundException("Post","post id",postId));
+
+        return this.modelMapper.map(post, PostDto.class);
     }
 
     @Override
