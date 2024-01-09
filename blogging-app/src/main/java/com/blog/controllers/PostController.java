@@ -21,7 +21,7 @@ import javax.print.attribute.standard.Media;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api")
 public class PostController {
